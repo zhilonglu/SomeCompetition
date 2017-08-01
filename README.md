@@ -1,0 +1,3 @@
+# SomeCompetition
+主要是网上一些比赛的代码，有JData的，kaggle的，还有关于xgboost的一些实验性的代码
+其中JData以及kaggle的这些代码都是源于网上大神的，主要拿来与大家分享以及学习。
