@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 import time
 from datetime import datetime
@@ -9,12 +8,13 @@ import os
 import math
 import numpy as np
 
-action_1_path = "./data/JData_Action_201602.csv"
-action_2_path = "./data/JData_Action_201603.csv"
-action_3_path = "./data/JData_Action_201604.csv"
-comment_path = "./data/JData_Comment.csv"
-product_path = "./data/JData_Product.csv"
-user_path = "./data/JData_User.csv"
+path = "C:\\Users\\NLSDE\\Desktop\\jd\\data\\"
+action_1_path = path+"JData_Action_201602.csv"
+action_2_path = path+"JData_Action_201603.csv"
+action_3_path = path+"JData_Action_201604.csv"
+comment_path = path+"JData_Comment.csv"
+product_path = path+"JData_Product.csv"
+user_path = path+"JData_User.csv"
 
 comment_date = ["2016-02-01", "2016-02-08", "2016-02-15", "2016-02-22", "2016-02-29", "2016-03-07", "2016-03-14",
                 "2016-03-21", "2016-03-28",
@@ -42,7 +42,7 @@ def convert_age(age_str):
 def get_basic_user_feat():
     dump_path = './cache/basic_user.pkl'
     if os.path.exists(dump_path):
-        user = pickle.load(open(dump_path))
+        user = pickle.load(open(dump_path,'rb'))
     else:
         user = pd.read_csv(user_path, encoding='gbk')
         user['age'] = user['age'].map(convert_age)
@@ -50,23 +50,22 @@ def get_basic_user_feat():
         sex_df = pd.get_dummies(user["sex"], prefix="sex")
         user_lv_df = pd.get_dummies(user["user_lv_cd"], prefix="user_lv_cd")
         user = pd.concat([user['user_id'], age_df, sex_df, user_lv_df], axis=1)
-        pickle.dump(user, open(dump_path, 'w'))
+        pickle.dump(user, open(dump_path, 'wb'))
     return user
 
 
 def get_basic_product_feat():
     dump_path = './cache/basic_product.pkl'
     if os.path.exists(dump_path):
-        product = pickle.load(open(dump_path))
+        product = pickle.load(open(dump_path,'rb'))
     else:
         product = pd.read_csv(product_path)
         attr1_df = pd.get_dummies(product["a1"], prefix="a1")
         attr2_df = pd.get_dummies(product["a2"], prefix="a2")
         attr3_df = pd.get_dummies(product["a3"], prefix="a3")
         product = pd.concat([product[['sku_id', 'cate', 'brand']], attr1_df, attr2_df, attr3_df], axis=1)
-        pickle.dump(product, open(dump_path, 'w'))
+        pickle.dump(product, open(dump_path, 'wb'))
     return product
-
 
 def get_actions_1():
     action = pd.read_csv(action_1_path)
@@ -90,14 +89,14 @@ def get_actions(start_date, end_date):
     """
     dump_path = './cache/all_action_%s_%s.pkl' % (start_date, end_date)
     if os.path.exists(dump_path):
-        actions = pickle.load(open(dump_path))
+        actions = pickle.load(open(dump_path,'rb'))
     else:
         action_1 = get_actions_1()
         action_2 = get_actions_2()
         action_3 = get_actions_3()
         actions = pd.concat([action_1, action_2, action_3]) # type: pd.DataFrame
         actions = actions[(actions.time >= start_date) & (actions.time < end_date)]
-        pickle.dump(actions, open(dump_path, 'w'))
+        pickle.dump(actions, open(dump_path, 'wb'))
     return actions
 
 
@@ -112,14 +111,14 @@ def get_action_feat(start_date, end_date):
         actions = pd.concat([actions, df], axis=1)  # type: pd.DataFrame
         actions = actions.groupby(['user_id', 'sku_id'], as_index=False).sum()
         del actions['type']
-        pickle.dump(actions, open(dump_path, 'w'))
+        pickle.dump(actions, open(dump_path, 'wb'))
     return actions
 
 
 def get_accumulate_action_feat(start_date, end_date):
     dump_path = './cache/action_accumulate_%s_%s.pkl' % (start_date, end_date)
     if os.path.exists(dump_path):
-        actions = pickle.load(open(dump_path))
+        actions = pickle.load(open(dump_path,'rb'))
     else:
         actions = get_actions(start_date, end_date)
         df = pd.get_dummies(actions['type'], prefix='action')
@@ -141,14 +140,14 @@ def get_accumulate_action_feat(start_date, end_date):
         del actions['datetime']
         del actions['weights']
         actions = actions.groupby(['user_id', 'sku_id', 'cate', 'brand'], as_index=False).sum()
-        pickle.dump(actions, open(dump_path, 'w'))
+        pickle.dump(actions, open(dump_path, 'wb'))
     return actions
 
 
 def get_comments_product_feat(start_date, end_date):
     dump_path = './cache/comments_accumulate_%s_%s.pkl' % (start_date, end_date)
     if os.path.exists(dump_path):
-        comments = pickle.load(open(dump_path))
+        comments = pickle.load(open(dump_path,'rb'))
     else:
         comments = pd.read_csv(comment_path)
         comment_date_end = end_date
@@ -163,7 +162,7 @@ def get_comments_product_feat(start_date, end_date):
         #del comments['dt']
         #del comments['comment_num']
         comments = comments[['sku_id', 'has_bad_comment', 'bad_comment_rate', 'comment_num_1', 'comment_num_2', 'comment_num_3', 'comment_num_4']]
-        pickle.dump(comments, open(dump_path, 'w'))
+        pickle.dump(comments, open(dump_path, 'wb'))
     return comments
 
 
@@ -172,7 +171,7 @@ def get_accumulate_user_feat(start_date, end_date):
                'user_action_5_ratio', 'user_action_6_ratio']
     dump_path = './cache/user_feat_accumulate_%s_%s.pkl' % (start_date, end_date)
     if os.path.exists(dump_path):
-        actions = pickle.load(open(dump_path))
+        actions = pickle.load(open(dump_path,'rb'))
     else:
         actions = get_actions(start_date, end_date)
         df = pd.get_dummies(actions['type'], prefix='action')
@@ -184,7 +183,7 @@ def get_accumulate_user_feat(start_date, end_date):
         actions['user_action_5_ratio'] = actions['action_4'] / actions['action_5']
         actions['user_action_6_ratio'] = actions['action_4'] / actions['action_6']
         actions = actions[feature]
-        pickle.dump(actions, open(dump_path, 'w'))
+        pickle.dump(actions, open(dump_path, 'wb'))
     return actions
 
 
@@ -193,7 +192,7 @@ def get_accumulate_product_feat(start_date, end_date):
                'product_action_5_ratio', 'product_action_6_ratio']
     dump_path = './cache/product_feat_accumulate_%s_%s.pkl' % (start_date, end_date)
     if os.path.exists(dump_path):
-        actions = pickle.load(open(dump_path))
+        actions = pickle.load(open(dump_path,'rb'))
     else:
         actions = get_actions(start_date, end_date)
         df = pd.get_dummies(actions['type'], prefix='action')
@@ -205,28 +204,28 @@ def get_accumulate_product_feat(start_date, end_date):
         actions['product_action_5_ratio'] = actions['action_4'] / actions['action_5']
         actions['product_action_6_ratio'] = actions['action_4'] / actions['action_6']
         actions = actions[feature]
-        pickle.dump(actions, open(dump_path, 'w'))
+        pickle.dump(actions, open(dump_path, 'wb'))
     return actions
 
 
 def get_labels(start_date, end_date):
     dump_path = './cache/labels_%s_%s.pkl' % (start_date, end_date)
     if os.path.exists(dump_path):
-        actions = pickle.load(open(dump_path))
+        actions = pickle.load(open(dump_path,'rb'))
     else:
         actions = get_actions(start_date, end_date)
         actions = actions[actions['type'] == 4]
         actions = actions.groupby(['user_id', 'sku_id'], as_index=False).sum()
         actions['label'] = 1
         actions = actions[['user_id', 'sku_id', 'label']]
-        pickle.dump(actions, open(dump_path, 'w'))
+        pickle.dump(actions, open(dump_path, 'wb'))
     return actions
 
 
 def make_test_set(train_start_date, train_end_date):
     dump_path = './cache/test_set_%s_%s.pkl' % (train_start_date, train_end_date)
     if os.path.exists(dump_path):
-        actions = pickle.load(open(dump_path))
+        actions = pickle.load(open(dump_path,'rb'))
     else:
         start_days = "2016-02-01"
         user = get_basic_user_feat()
@@ -265,7 +264,7 @@ def make_test_set(train_start_date, train_end_date):
 def make_train_set(train_start_date, train_end_date, test_start_date, test_end_date, days=30):
     dump_path = './cache/train_set_%s_%s_%s_%s.pkl' % (train_start_date, train_end_date, test_start_date, test_end_date)
     if os.path.exists(dump_path):
-        actions = pickle.load(open(dump_path))
+        actions = pickle.load(open(dump_path,'rb'))
     else:
         start_days = "2016-02-01"
         user = get_basic_user_feat()
